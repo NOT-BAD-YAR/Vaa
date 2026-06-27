@@ -1,0 +1,11 @@
+google-genai
+python-dotenv
+SpeechRecognition
+pyttsx3
+pyaudio
+pyautogui
+opencv-python
+pillow
+requests
+psutil
+customtkinter

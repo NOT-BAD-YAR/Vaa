@@ -1,0 +1,19 @@
+# Environment variables
+.env
+
+# Virtual environments
+venv/
+jarvis/
+env/
+.venv/
+
+# Python cache and compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Media files
+media/recordings/
+media/screenshots/
+media/camera/
+media/audio/
