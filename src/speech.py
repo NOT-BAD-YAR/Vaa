@@ -20,7 +20,7 @@ def speak(text: str):
         engine.say(text)
         engine.runAndWait()
     except Exception as e:
-        print(f"[Vaa (TTS Error)]: {text} (Error: {e})")
+        print(f"[Ivanae (TTS Error)]: {text} (Error: {e})")
 
 def listen() -> str:
     """Listens to microphone audio and converts voice note to text."""
