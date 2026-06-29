@@ -150,7 +150,8 @@ def execute_action(action_str: str, user_statement: str = "") -> str:
                     contents=[img, prompt],
                     model=GEMINI_VISION_MODEL
                 )
-                return f"Looking at the webcam: {response.text.strip()}"
+                response_text = response.text if response.text else ""
+                return f"Looking at the webcam: {response_text.strip()}"
             except Exception as e:
                 raise RuntimeError(f"Could not analyze webcam image: {str(e)}")
         else:

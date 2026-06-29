@@ -30,7 +30,7 @@ class VaaGUI(ctk.CTk):
         self._start_queue_listener()
         
         # Initial greeting
-        greeting = "Hi ticko Im your mario by the way your personal assistant today what we are gonna do soldra dei lavadae ...!"
+        greeting = "Hi daa lavadaeeeeee ...!"
         self._log_message("Vaa", greeting)
         self._run_async(lambda: speak(greeting))
 

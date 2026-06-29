@@ -53,9 +53,11 @@ def generate_with_retry(client, contents, model=GEMINI_VISION_MODEL, retries=3):
                     continue
                 else:
                     raise e
-    raise last_err
+    if last_err is not None:
+        raise last_err
+    raise RuntimeError("Generation failed after retries.")
 
-def query_ollama(prompt: str, images: list = None, model: str = DEFAULT_MODEL, timeout: int = 120) -> str:
+def query_ollama(prompt: str, images: list | None = None, model: str = DEFAULT_MODEL, timeout: int = 120) -> str:
     """Queries local Ollama API, disables/strips thinking blocks, and returns clean text."""
     url = "http://localhost:11434/api/generate"
     

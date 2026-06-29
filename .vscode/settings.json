@@ -1,0 +1,6 @@
+{
+    "python.defaultInterpreterPath": "${workspaceFolder}/jarvis/Scripts/python.exe",
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}/jarvis/Lib/site-packages"
+    ]
+}

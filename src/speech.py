@@ -7,14 +7,18 @@ def speak(text: str):
         engine = pyttsx3.init()
         # Set speech rate slightly faster or normal
         rate = engine.getProperty('rate')
-        engine.setProperty('rate', rate - 10)
+        if isinstance(rate, (int, float)):
+            engine.setProperty('rate', rate - 10)
         
         # Select sweet female voice (Zira or Hazel)
         voices = engine.getProperty('voices')
-        for voice in voices:
-            if "zira" in voice.name.lower() or "hazel" in voice.name.lower() or "female" in voice.name.lower():
-                engine.setProperty('voice', voice.id)
-                break
+        if isinstance(voices, (list, tuple)):
+            for voice in voices:
+                name = getattr(voice, 'name', '')
+                voice_id = getattr(voice, 'id', None)
+                if voice_id and any(k in str(name).lower() for k in ["zira", "hazel", "female"]):
+                    engine.setProperty('voice', voice_id)
+                    break
                 
         print(f"[Vaa]: {text}")
         engine.say(text)
@@ -32,7 +36,7 @@ def listen() -> str:
             audio = recognizer.listen(source, timeout=5, phrase_time_limit=10)
             
             print("[Recognizing...]")
-            text = recognizer.recognize_google(audio)
+            text = recognizer.recognize_google(audio) # pyright: ignore[reportAttributeAccessIssue]
             print(f"[You said]: {text}")
             return text
     except sr.WaitTimeoutError:

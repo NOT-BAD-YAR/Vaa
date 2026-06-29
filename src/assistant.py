@@ -44,7 +44,8 @@ def generate_model_response(prompt: str, use_online: bool) -> str:
         try:
             client = get_gemini_client()
             response = generate_with_retry(client, contents=[prompt], model=GEMINI_VISION_MODEL)
-            return response.text.strip()
+            response_text = response.text if response.text else ""
+            return response_text.strip()
         except Exception as e:
             print(f"[Router Warning]: Online API failed ({e}). Falling back to Local Ollama...")
             return query_ollama(prompt=prompt, model=DEFAULT_MODEL)
@@ -55,7 +56,8 @@ def generate_model_response(prompt: str, use_online: bool) -> str:
             print(f"[Router Warning]: Local Ollama failed ({e}). Falling back to Online API...")
             client = get_gemini_client()
             response = generate_with_retry(client, contents=[prompt], model=GEMINI_VISION_MODEL)
-            return response.text.strip()
+            response_text = response.text if response.text else ""
+            return response_text.strip()
 
 def extract_command_tag(text: str) -> str | None:
     """Extracts content inside <CMD>...</CMD> tags."""
@@ -176,3 +178,4 @@ def process_statement(statement: str, is_sleeping: bool = False) -> tuple[str, b
                 print(f"[Self-Corrected Command]: {current_cmd}")
             else:
                 return f"Action failed after retry: {err_msg}", False, None
+    return "Action execution ended unexpectedly.", False, None

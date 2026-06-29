@@ -55,7 +55,7 @@ def capture_camera_image() -> str:
 def _record_screen_worker(filepath: str, fps: int = 10):
     global _stop_recording_flag
     screen_width, screen_height = pyautogui.size()
-    fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+    fourcc = cv2.VideoWriter_fourcc(*"mp4v") # pyright: ignore[reportAttributeAccessIssue]
     out = cv2.VideoWriter(filepath, fourcc, fps, (screen_width, screen_height))
     
     frame_duration = 1.0 / fps
