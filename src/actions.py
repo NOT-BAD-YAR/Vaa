@@ -7,8 +7,9 @@ import requests
 import pyautogui
 from PIL import Image
 import base64
-from src.vision import take_screenshot, capture_camera_image, start_screen_recording, stop_screen_recording
+from src.vision import take_screenshot, capture_camera_image, start_screen_recording, stop_screen_recording, locate_and_verify_ui, locate_and_click_ui
 from src.config import DEFAULT_MODEL, query_ollama, get_gemini_client, GEMINI_VISION_MODEL, generate_with_retry
+from src.logger import log
 
 def search_windows_app_paths(query: str) -> list[str]:
     """
@@ -52,6 +53,7 @@ def execute_action(action_str: str, user_statement: str = "") -> str:
       VISION: CAMERA_ANALYZE
     """
     action_str = action_str.strip()
+    log.info(f"[Action Executor] Executing action: {action_str}")
     
     # Handle universal RUN_COMMAND template
     if action_str.startswith("RUN_COMMAND:"):
@@ -138,8 +140,9 @@ def execute_action(action_str: str, user_statement: str = "") -> str:
 
     # Handle universal VISION commands
     elif action_str.startswith("VISION:"):
-        vis_cmd = action_str.split("VISION:", 1)[1].strip().upper()
-        if vis_cmd == "CAMERA_ANALYZE":
+        vis_cmd = action_str.split("VISION:", 1)[1].strip()
+        vis_cmd_upper = vis_cmd.upper()
+        if vis_cmd_upper == "CAMERA_ANALYZE":
             try:
                 img_path = capture_camera_image()
                 client = get_gemini_client()
@@ -154,8 +157,38 @@ def execute_action(action_str: str, user_statement: str = "") -> str:
                 return f"Looking at the webcam: {response_text.strip()}"
             except Exception as e:
                 raise RuntimeError(f"Could not analyze webcam image: {str(e)}")
+        elif vis_cmd_upper.startswith("LOCATE_VERIFY:") or vis_cmd_upper.startswith("VERIFY:"):
+            target = vis_cmd.split(":", 1)[1].strip()
+            log.info(f"[Action Execution] Running locate_and_verify_ui on target: {target}")
+            return locate_and_verify_ui(target)
+        elif vis_cmd_upper.startswith("LOCATE_CLICK:") or vis_cmd_upper.startswith("CLICK:"):
+            target = vis_cmd.split(":", 1)[1].strip()
+            log.info(f"[Action Execution] Running locate_and_click_ui on target: {target}")
+            return locate_and_click_ui(target)
         else:
             raise ValueError(f"Unknown vision command: {vis_cmd}")
+
+    # Handle universal KEYBOARD commands
+    elif action_str.startswith("KEYBOARD:"):
+        kb_cmd = action_str.split("KEYBOARD:", 1)[1].strip()
+        kb_upper = kb_cmd.upper()
+        if kb_upper.startswith("TYPE:"):
+            text_to_type = kb_cmd.split(":", 1)[1].strip()
+            log.info(f"[Action Execution] Typing keyboard text: {text_to_type[:40]}...")
+            pyautogui.write(text_to_type, interval=0.02)
+            return f"Typed text: {text_to_type[:30]}..."
+        elif kb_upper.startswith("HOTKEY:"):
+            keys = [k.strip().lower() for k in kb_cmd.split(":", 1)[1].split(",")]
+            log.info(f"[Action Execution] Executing hotkey: {keys}")
+            pyautogui.hotkey(*keys)
+            return f"Pressed hotkeys: {' + '.join(keys)}"
+        elif kb_upper.startswith("PRESS:"):
+            key = kb_cmd.split(":", 1)[1].strip().lower()
+            log.info(f"[Action Execution] Pressing key: {key}")
+            pyautogui.press(key)
+            return f"Pressed key: {key}"
+        else:
+            raise ValueError(f"Unknown keyboard command: {kb_cmd}")
 
     # Legacy fallback handlers for backward compatibility
     elif action_str == "ACTION_AWAKEN":

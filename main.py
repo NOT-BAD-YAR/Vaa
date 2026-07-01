@@ -26,7 +26,7 @@ def main():
         return
     is_sleeping = False
     
-    speak("Hi ticko Im your mario by the way your personal assistant today what we are gonna do soldra dei lavadae ...!")
+    speak("Hi daaaa lavadaeeeeeee ...!")
     
     while True:
         try:

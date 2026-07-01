@@ -82,9 +82,45 @@ def act_on_screen(instruction: str):
     
     print(f"\n[Qwen Output]: {output_text}\n")
     
-    # In a fully fleshed out agent, you would parse the specific coordinate format 
-    # (e.g. <|box_start|>(x1,y1),(x2,y2)<|box_end|>) from output_text and use 
-    # pyautogui.click(x, y) here!
+    # Automatically parse coordinates from model output
+    screen_width, screen_height = pyautogui.size()
+    center_x, center_y = None, None
+
+    # Format 1: Explicit x and y labels, e.g. "(x: 1050, y: 20)" or "x=1050, y=20"
+    match_xy = re.search(r"x\s*[:=]\s*([0-9.]+).*?y\s*[:=]\s*([0-9.]+)", output_text, re.IGNORECASE)
+    if not match_xy:
+        match_yx = re.search(r"y\s*[:=]\s*([0-9.]+).*?x\s*[:=]\s*([0-9.]+)", output_text, re.IGNORECASE)
+        if match_yx:
+            center_y, center_x = float(match_yx.group(1)), float(match_yx.group(2))
+    else:
+        center_x, center_y = float(match_xy.group(1)), float(match_xy.group(2))
+
+    # Format 2: 4-value bounding box [ymin, xmin, ymax, xmax] or [x1, y1, x2, y2]
+    if center_x is None or center_y is None:
+        coords_match = re.search(r"\[?\s*([0-9.]+)\s*,\s*([0-9.]+)\s*,\s*([0-9.]+)\s*,\s*([0-9.]+)\s*\]?", output_text)
+        if coords_match:
+            c1, c2, c3, c4 = [float(x) for x in coords_match.groups()]
+            if all(c <= 1.0 for c in (c1, c2, c3, c4)):
+                c1, c2, c3, c4 = c1 * screen_height, c2 * screen_width, c3 * screen_height, c4 * screen_width
+            elif all(c <= 1000.0 for c in (c1, c2, c3, c4)) and any(c < 1000 for c in (c1, c2, c3, c4)):
+                c1, c2, c3, c4 = (c1/1000.0)*screen_height, (c2/1000.0)*screen_width, (c3/1000.0)*screen_height, (c4/1000.0)*screen_width
+                
+            ymin, xmin, ymax, xmax = min(c1, c3), min(c2, c4), max(c1, c3), max(c2, c4)
+            center_x = (xmin + xmax) / 2.0
+            center_y = (ymin + ymax) / 2.0
+
+    # Format 3: Simple 2-value coordinate pair (x, y) or [x, y]
+    if center_x is None or center_y is None:
+        match_pair = re.search(r"[\(\[\s]*([0-9]+)\s*[,x\s]\s*([0-9]+)[\)\]\s]*", output_text)
+        if match_pair:
+            center_x, center_y = float(match_pair.group(1)), float(match_pair.group(2))
+
+    if center_x is not None and center_y is not None:
+        center_x = max(0, min(int(round(center_x)), screen_width - 1))
+        center_y = max(0, min(int(round(center_y)), screen_height - 1))
+        print(f"--> Target located! Moving mouse to click at ({center_x}, {center_y})...")
+        pyautogui.moveTo(center_x, center_y, duration=0.5)
+        pyautogui.click()
     
 if __name__ == "__main__":
     print("Welcome to the Qwen Screen Agent!")
